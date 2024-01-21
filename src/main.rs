@@ -45,31 +45,31 @@ fn setup(
 
     let mut rng = rand::thread_rng();
 
-    // Spawn cube stacks
-    for x in -2..2 {
-        for z in -2..2 {
-            let translation= Vec3::new(x as f32, 5.0, z as f32) * (cube_size + cube_gap);
-            let axis = Vector3::new(rng.gen(), rng.gen(), rng.gen()).normalize();
-            let angle = rng.gen_range(0.0..std::f64::consts::PI * 2.0);
-            let rotation = Quaternion::from_axis_angle(axis, angle as f32);
-            let scale = Vec3::splat(cube_size as f32);
-            commands.spawn((
-                PbrBundle {
-                    mesh: cube_mesh.clone(),
-                    material: materials.add(Color::rgb(0.2, 0.7, 0.9).into()),
-                    // transform: Transform::from_translation(position)
-                    //     .with_scale(Vec3::splat(cube_size as f32)),
-                    // ..default()
-
-                    // instead of only translation, apply random rotation.
-                    transform: Transform { translation, rotation, scale },
-                    ..default()
-                },
-                RigidBody::Dynamic,
-                Collider::cuboid(1.0, 1.0, 1.0),
-                MovementAcceleration(10.0),
-            ));
-        }
+    // spawn five cubes
+    let cube_pos: [Vec3; 5] = [
+        Vec3::new(0.0, 5.0, 0.0),
+        Vec3::new(1.0, 5.0, 1.0),
+        Vec3::new(1.0, 5.0, -1.0),
+        Vec3::new(-1.0, 5.0, 1.0),
+        Vec3::new(-1.0, 5.0, -1.0),
+    ];
+    for pos in cube_pos {
+        let translation= pos * (cube_size + cube_gap);
+        let axis = Vector3::new(rng.gen(), rng.gen(), rng.gen()).normalize();
+        let angle = rng.gen_range(0.0..std::f64::consts::PI * 2.0);
+        let rotation = Quaternion::from_axis_angle(axis, angle as f32);
+        let scale = Vec3::splat(cube_size as f32);
+        commands.spawn((
+            PbrBundle {
+                mesh: cube_mesh.clone(),
+                material: materials.add(Color::rgb(0.2, 0.7, 0.9).into()),
+                transform: Transform { translation, rotation, scale },
+                ..default()
+            },
+            RigidBody::Dynamic,
+            Collider::cuboid(1.0, 1.0, 1.0),
+            MovementAcceleration(10.0),
+        ));
     }
 
     // Directional light
