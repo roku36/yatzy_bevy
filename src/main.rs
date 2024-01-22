@@ -13,13 +13,13 @@ use crate::{
 
 fn main() {
     App::new()
+        .add_systems(Startup, setup)
         .add_plugins((DefaultPlugins, XpbdExamplePlugin))
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(DicePlugin)
         .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.1)))
         .insert_resource(Msaa::Sample4)
         .insert_resource(Gravity(Vec3::NEG_Y * 80.0))
-        .add_systems(Startup, setup)
         // .add_systems(Update, apply_limit)
         .run();
 }
@@ -30,8 +30,6 @@ struct MovementAcceleration(Scalar);
 
 fn setup(
     mut commands: Commands,
-    // mut materials: ResMut<Assets<StandardMaterial>>,
-    // mut meshes: ResMut<Assets<Mesh>>,
     scene_assets: Res<SceneAssets>,
 ) {
     let tray_scene = scene_assets.tray.clone();
@@ -45,8 +43,6 @@ fn setup(
         RigidBody::Static,
         AsyncSceneCollider::new(Some(ComputedCollider::TriMesh))
     ));
-
-    // spawn dice
 
     // Directional light
     commands.spawn(DirectionalLightBundle {
