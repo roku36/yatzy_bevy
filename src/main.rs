@@ -27,9 +27,6 @@ fn main() {
 #[derive(Component)]
 struct MovementAcceleration(Scalar);
 
-// #[derive(Component)]
-// struct LimitRadius(Scalar);
-
 fn setup(
     mut commands: Commands,
     // mut materials: ResMut<Assets<StandardMaterial>>,
@@ -76,7 +73,8 @@ fn setup(
             },
             RigidBody::Dynamic,
             // Collider::cuboid(cube_size, cube_size, cube_size),
-            AsyncSceneCollider::new(Some(ComputedCollider::ConvexHull)),
+            Collider::cuboid(2.0, 2.0, 2.0),
+            // AsyncSceneCollider::new(Some(ComputedCollider::ConvexHull)),
             MovementAcceleration(10.0),
         ));
     }
@@ -94,7 +92,7 @@ fn setup(
 
     // Camera
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::new(0.0, 60.0, 20.0))
+        transform: Transform::from_translation(Vec3::new(0.0, 30.0, 10.0))
             .looking_at(Vec3::Y * 2.0, Vec3::Y),
         ..default()
     });
