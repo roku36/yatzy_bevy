@@ -25,8 +25,12 @@ fn roll_dices(
     mut commands: Commands,
     scene_assets: Res<SceneAssets>,
     mut events: EventReader<DiceRollEvent>,
+    dices: Query<Entity, With<Dice>>,
 ){
     for _event in events.read() {
+        for entity in dices.iter() {
+            commands.entity(entity).despawn_recursive();
+        }
         let mut rng = rand::thread_rng();
 
         let cube_size = 1.0;
@@ -69,4 +73,3 @@ fn keyboard_input(
         ev_dice_roll.send(DiceRollEvent);
     }
 }
-
