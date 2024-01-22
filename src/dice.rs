@@ -112,15 +112,43 @@ fn lock_dice(
         linear_velocity,
         angular_velocity
     ) in dice.iter_mut() {
-            if linear_velocity.0.length() < 0.1 && angular_velocity.0.length() < 0.1 {
+            if linear_velocity.0.length() < 0.1 && angular_velocity.0.length() < 0.1 && !dice.locked {
                 // add time to dice
                 dice.static_timer += 1;
             }
             if dice.static_timer > 20 {
                 *handle_scene = scene_assets.dice1.clone();
                 *rigid_body = RigidBody::Static;
-                transform.rotation
-                Quat
+                dice.number = determine_dice_face(transform.rotation);
+                info!("dice number: {}", dice.number);
+                dice.static_timer = 0;
+                dice.locked = true;
             }
         }
+}
+
+const CUBE_SIDES: [Vec3; 6] = [
+    Vec3::new(0.0, 0.0, -1.0),
+    Vec3::new(1.0, 0.0, 0.0),
+    Vec3::new(0.0, -1.0, 0.0),
+    Vec3::new(0.0, 1.0, 0.0),
+    Vec3::new(-1.0, 0.0, 0.0),
+    Vec3::new(0.0, 0.0, 1.0),
+];
+
+fn determine_dice_face(quat: Quat) -> u32 {
+    // let rotated_up = quat.mul_quat(Quat::from_rotation_x(std::f32::consts::FRAC_PI_2));
+    let mut max_height= -1.0;
+    let mut best_match = 6;
+
+    for (i, side) in CUBE_SIDES.iter().enumerate() {
+        // let dot = rotated_up.dot(*side);
+        let y = quat.mul_vec3(*side)[1];
+        if y > max_height {
+            max_height = y;
+            best_match = i;
+        }
+    }
+
+    best_match as u32 + 1
 }
