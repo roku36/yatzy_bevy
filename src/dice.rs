@@ -56,7 +56,7 @@ fn roll_dice(
             let scale = Vec3::splat(cube_size as f32);
             commands.spawn((
                 SceneBundle {
-                    scene: scene_assets.dice.clone(),
+                    scene: scene_assets.dice0.clone(),
                     transform: Transform { translation, rotation, scale },
                     ..default()
                 },
@@ -94,15 +94,33 @@ fn respawn_dice(
 }
 
 fn lock_dice(
-    mut dice: Query<(&mut Dice, &mut RigidBody, &mut LinearVelocity, &mut AngularVelocity), With<Dice>>,
+    mut dice: Query<(
+    &mut Handle<Scene>, 
+    &mut Dice, 
+    &mut RigidBody, 
+    &Transform, 
+    &LinearVelocity, 
+    &AngularVelocity
+), With<Dice>>,
+    scene_assets: Res<SceneAssets>,
 ){
-    for (mut dice,mut rigid_body, linear_velocity, angular_velocity) in dice.iter_mut() {
-        if linear_velocity.0.length() < 0.1 && angular_velocity.0.length() < 0.1 {
-            // add time to dice
-            dice.static_timer += 1;
+    for (
+        mut handle_scene,
+        mut dice,
+        mut rigid_body,
+        transform,
+        linear_velocity,
+        angular_velocity
+    ) in dice.iter_mut() {
+            if linear_velocity.0.length() < 0.1 && angular_velocity.0.length() < 0.1 {
+                // add time to dice
+                dice.static_timer += 1;
+            }
+            if dice.static_timer > 20 {
+                *handle_scene = scene_assets.dice1.clone();
+                *rigid_body = RigidBody::Static;
+                transform.rotation
+                Quat
+            }
         }
-        if dice.static_timer > 10 {
-            *rigid_body = RigidBody::Static;
-        }
-    }
 }
