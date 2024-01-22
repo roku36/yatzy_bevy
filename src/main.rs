@@ -3,18 +3,23 @@
 use bevy::prelude::*;
 use bevy_xpbd_3d::{math::*, prelude::*};
 mod examples_common_3d;
-use crate::examples_common_3d::XpbdExamplePlugin;
+mod asset_loader;
+use crate::{
+    examples_common_3d::XpbdExamplePlugin,
+    asset_loader::{SceneAssets, AssetLoaderPlugin},
+};
 use rand::Rng;
 
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins, XpbdExamplePlugin))
+        .add_plugins(AssetLoaderPlugin)
         .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.1)))
         .insert_resource(Msaa::Sample4)
         .insert_resource(Gravity(Vec3::NEG_Y * 80.0))
         .add_systems(Startup, setup)
         .add_systems(Update, movement)
-        .add_systems(Update, apply_limit)
+        // .add_systems(Update, apply_limit)
         .run();
 }
 
@@ -22,54 +27,34 @@ fn main() {
 #[derive(Component)]
 struct MovementAcceleration(Scalar);
 
-#[derive(Component)]
-struct LimitRadius(Scalar);
+// #[derive(Component)]
+// struct LimitRadius(Scalar);
 
 fn setup(
     mut commands: Commands,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
+    // mut materials: ResMut<Assets<StandardMaterial>>,
+    // mut meshes: ResMut<Assets<Mesh>>,
+    scene_assets: Res<SceneAssets>,
 ) {
-    let cube_mesh = meshes.add(Mesh::from(shape::Cube { size: 1.0 }));
-    let cylinder_mesh = meshes.add(Mesh::from(shape::Cylinder { radius: 10.0, height: 1.0, resolution: 256, segments: 1 }));
+    let tray_scene = scene_assets.tray.clone();
 
-    // cylinder for dice dish
+    // spawn dice tray
     commands.spawn((
-        PbrBundle {
-            mesh: cylinder_mesh.clone(),
-            material: materials.add(Color::rgb(0.0, 0.2, 0.0).into()),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        SceneBundle {
+            scene: tray_scene,
             ..default()
         },
         RigidBody::Static,
-        Collider::cylinder(1.0, 10.0),
+        AsyncSceneCollider::new(Some(ComputedCollider::TriMesh))
     ));
-    // commands.spawn((
-    //     PbrBundle {
-    //         mesh: circle_mesh.clone(),
-    //         material: materials.add(Color::rgb(0.2, 0.7, 0.9).into()),
-    //         transform: Transform::from_xyz(0.0, 1.0, 0.0),
-    //         ..default()
-    //     },
-    //     RigidBody::Dynamic,
-    //     Collider::cylinder(0.5, 1.0),
-    // ));
 
-
-    let cube_size = 2.0;
-    let cube_gap = 0.5;
+    let cube_size = 1.0;
+    let cube_gap = 2.0;
 
     let mut rng = rand::thread_rng();
 
     // spawn five cubes
     let cube_height = 15.0;
-    // let cube_pos: [Vec3; 5] = [
-    //     Vec3::new(0.0, 5.0, 0.0),
-    //     Vec3::new(1.0, 5.0, 1.0),
-    //     Vec3::new(1.0, 5.0, -1.0),
-    //     Vec3::new(-1.0, 5.0, 1.0),
-    //     Vec3::new(-1.0, 5.0, -1.0),
-    // ];
     let cube_pos = [
         Vec3::new(0.0, cube_height, 0.0),
         Vec3::new(1.0, cube_height, 1.0),
@@ -84,16 +69,15 @@ fn setup(
         let rotation = Quaternion::from_axis_angle(axis, angle as f32);
         let scale = Vec3::splat(cube_size as f32);
         commands.spawn((
-            PbrBundle {
-                mesh: cube_mesh.clone(),
-                material: materials.add(Color::rgb(0.2, 0.7, 0.9).into()),
+            SceneBundle {
+                scene: scene_assets.dice.clone(),
                 transform: Transform { translation, rotation, scale },
                 ..default()
             },
             RigidBody::Dynamic,
-            Collider::cuboid(1.0, 1.0, 1.0),
+            // Collider::cuboid(cube_size, cube_size, cube_size),
+            AsyncSceneCollider::new(Some(ComputedCollider::ConvexHull)),
             MovementAcceleration(10.0),
-            LimitRadius(7.0),
         ));
     }
 
@@ -140,20 +124,6 @@ fn movement(
         if direction != Vector::ZERO {
             linear_velocity.x += direction.x * movement_acceleration.0 * delta_time;
             linear_velocity.z += direction.z * movement_acceleration.0 * delta_time;
-        }
-    }
-}
-
-fn apply_limit(mut query: Query<(&LimitRadius, &Position, &mut LinearVelocity)>) {
-    for (limit_radius, position, mut linear_velocity) in &mut query {
-        // if euclidean_distance(position.xy, Vec3::ZERO) > limit_radius.0 {
-        if position.xz().length() > limit_radius.0 {
-            let normalized = position.xz().normalize();
-            let dot_velocity = normalized.dot(linear_velocity.xz());
-            if dot_velocity > 0.0 {
-                linear_velocity.x -= dot_velocity * normalized.x;
-                linear_velocity.z -= dot_velocity * normalized.y;
-            }
         }
     }
 }
