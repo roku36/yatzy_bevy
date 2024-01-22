@@ -14,6 +14,7 @@ use crate::{
 fn main() {
     App::new()
         .add_systems(Startup, setup)
+        .add_systems(Update, move_camera)
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
@@ -30,8 +31,12 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.1)))
         .insert_resource(Msaa::Sample4)
         .insert_resource(Gravity(Vec3::NEG_Y * 80.0))
+        .insert_resource(CameraSpeed(Vec2::ZERO))
         .run();
 }
+
+#[derive(Resource)]
+struct CameraSpeed(Vec2);
 
 /// The acceleration used for movement.
 #[derive(Component)]
@@ -72,3 +77,34 @@ fn setup(
     });
 }
 
+fn move_camera(
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    mut query: Query<&mut Transform, With<Camera>>,
+    mut camera_speed: ResMut<CameraSpeed>,
+) {
+    let mut transform = query.single_mut();
+
+    if keys.pressed(KeyCode::Right) {
+        camera_speed.0.x += 0.1;
+    }
+    if keys.pressed(KeyCode::Left) {
+        camera_speed.0.x -= 0.1;
+    }
+    if keys.pressed(KeyCode::Up) {
+        camera_speed.0.y += 1.0;
+    }
+    if keys.pressed(KeyCode::Down) {
+        camera_speed.0.y -= 1.0;
+    }
+
+    camera_speed.0 *= 0.95;
+
+    transform.translation.y += camera_speed.0.y * time.delta_seconds();
+    transform.translation.y = transform.translation.y.clamp(5.0, 60.0);
+    transform.look_at(Vec3::Y * 1.0, Vec3::Y);
+
+    // rotate around the center
+    let rotation = Quat::from_rotation_y(time.delta_seconds() * camera_speed.0.x);
+    transform.rotate_around(Vec3::ZERO, rotation);
+}
