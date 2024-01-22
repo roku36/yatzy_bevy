@@ -14,9 +14,19 @@ use crate::{
 fn main() {
     App::new()
         .add_systems(Startup, setup)
-        .add_plugins((DefaultPlugins, XpbdExamplePlugin))
-        .add_plugins(AssetLoaderPlugin)
-        .add_plugins(DicePlugin)
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    // fill the entire browser window
+                    fit_canvas_to_parent: true,
+                    ..default()
+                }),
+                ..default()
+            }),
+            XpbdExamplePlugin,
+            AssetLoaderPlugin,
+            DicePlugin,
+        ))
         .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.1)))
         .insert_resource(Msaa::Sample4)
         .insert_resource(Gravity(Vec3::NEG_Y * 80.0))

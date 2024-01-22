@@ -14,21 +14,20 @@ pub struct DiceRollEvent;
 impl Plugin for DicePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(PostStartup, roll_dices)
-            .add_systems(Update, (keyboard_input, roll_dices))
+            .add_systems(Update, (keyboard_input, roll_dice, respawn_dice))
             .add_event::<DiceRollEvent>();
         // .add_systems(Update, roll_dices.in_set(InGameSet::EntityUpdates),);
     }
 }
 
-fn roll_dices(
+fn roll_dice(
     mut commands: Commands,
     scene_assets: Res<SceneAssets>,
     mut events: EventReader<DiceRollEvent>,
-    dices: Query<Entity, With<Dice>>,
+    dice: Query<Entity, With<Dice>>,
 ){
     for _event in events.read() {
-        for entity in dices.iter() {
+        for entity in dice.iter() {
             commands.entity(entity).despawn_recursive();
         }
         let mut rng = rand::thread_rng();
@@ -71,5 +70,17 @@ fn keyboard_input(
 ){
     if keys.just_pressed(KeyCode::Space) {
         ev_dice_roll.send(DiceRollEvent);
+    }
+}
+
+fn respawn_dice(
+    mut dice: Query<(&mut Transform, &mut LinearVelocity, &mut AngularVelocity), With<Dice>>,
+){
+    for (mut transform, mut linear_velocity, mut angular_velocity) in dice.iter_mut() {
+        if transform.translation.length() > 100.0 {
+            transform.translation = Vec3::Y * 30.0;
+            *linear_velocity = LinearVelocity(Vec3::ZERO);
+            *angular_velocity = AngularVelocity(Vec3::ZERO);
+        }
     }
 }
