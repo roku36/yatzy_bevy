@@ -3,8 +3,12 @@ use bevy_xpbd_3d::{math::*, prelude::*};
 use crate::asset_loader::SceneAssets;
 use rand::Rng;
 
-#[derive(Component, Debug)]
-pub struct Dice;
+#[derive(Component)]
+pub struct Dice {
+    static_timer: u32,
+    number: u32,
+    locked: bool,
+}
 
 pub struct DicePlugin;
 
@@ -14,7 +18,7 @@ pub struct DiceRollEvent;
 impl Plugin for DicePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_systems(Update, (keyboard_input, roll_dice, respawn_dice))
+            .add_systems(Update, (keyboard_input, roll_dice, respawn_dice, lock_dice))
             .add_event::<DiceRollEvent>();
         // .add_systems(Update, roll_dices.in_set(InGameSet::EntityUpdates),);
     }
@@ -58,7 +62,11 @@ fn roll_dice(
                 },
                 RigidBody::Dynamic,
                 Collider::cuboid(2.0, 2.0, 2.0),
-                Dice,
+                Dice {
+                    static_timer: 0,
+                    number: 0,
+                    locked: false,
+                }
             ));
         }
     }
@@ -81,6 +89,20 @@ fn respawn_dice(
             transform.translation = Vec3::Y * 30.0;
             *linear_velocity = LinearVelocity(Vec3::ZERO);
             *angular_velocity = AngularVelocity(Vec3::ZERO);
+        }
+    }
+}
+
+fn lock_dice(
+    mut dice: Query<(&mut Dice, &mut RigidBody, &mut LinearVelocity, &mut AngularVelocity), With<Dice>>,
+){
+    for (mut dice,mut rigid_body, linear_velocity, angular_velocity) in dice.iter_mut() {
+        if linear_velocity.0.length() < 0.1 && angular_velocity.0.length() < 0.1 {
+            // add time to dice
+            dice.static_timer += 1;
+        }
+        if dice.static_timer > 10 {
+            *rigid_body = RigidBody::Static;
         }
     }
 }
