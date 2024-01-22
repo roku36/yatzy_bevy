@@ -11,4 +11,7 @@ bevy_xpbd_3d = "0.3.3"
 rand = "0.8.5"
 
 [profile.dev]
-opt-level = 2
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3

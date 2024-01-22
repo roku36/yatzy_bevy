@@ -20,7 +20,6 @@ fn main() {
         .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.1)))
         .insert_resource(Msaa::Sample4)
         .insert_resource(Gravity(Vec3::NEG_Y * 80.0))
-        // .add_systems(Update, apply_limit)
         .run();
 }
 
