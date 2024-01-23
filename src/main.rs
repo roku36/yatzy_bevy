@@ -102,7 +102,7 @@ fn move_camera(
 
     transform.translation.y += camera_speed.0.y * time.delta_seconds();
     transform.translation.y = transform.translation.y.clamp(5.0, 60.0);
-    transform.look_at(Vec3::Y * 1.0, Vec3::Y);
+    transform.look_at(Vec3::Y * 0.0, Vec3::Y);
 
     // rotate around the center
     let rotation = Quat::from_rotation_y(time.delta_seconds() * camera_speed.0.x);
