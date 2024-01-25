@@ -10,6 +10,10 @@ pub struct Dice {
     locked: bool,
 }
 
+// dice face array
+#[derive(Resource)]
+pub struct DiceResult(pub [u32; 5]);
+
 pub struct DicePlugin;
 
 #[derive(Event)]
@@ -18,6 +22,7 @@ pub struct DiceRollEvent;
 impl Plugin for DicePlugin {
     fn build(&self, app: &mut App) {
         app
+            .insert_resource(DiceResult([0; 5]))
             .add_systems(Update, (keyboard_input, roll_dice, respawn_dice, lock_dice))
             .add_event::<DiceRollEvent>();
         // .add_systems(Update, roll_dices.in_set(InGameSet::EntityUpdates),);
@@ -32,6 +37,7 @@ fn roll_dice(
 ){
     for _event in events.read() {
         for entity in dice.iter() {
+            // commands.entity(entity).despawn();
             commands.entity(entity).despawn_recursive();
         }
         let mut rng = rand::thread_rng();
@@ -95,17 +101,18 @@ fn respawn_dice(
 
 fn lock_dice(
     mut dice: Query<(
-    &mut Handle<Scene>, 
+    // &mut Handle<Scene>, 
     &mut Dice, 
     &mut RigidBody, 
     &Transform, 
     &LinearVelocity, 
     &AngularVelocity
 ), With<Dice>>,
-    scene_assets: Res<SceneAssets>,
+    // dice_result: Res<DiceResult>,
+    // scene_assets: Res<SceneAssets>,
 ){
     for (
-        mut handle_scene,
+        // mut handle_scene,
         mut dice,
         mut rigid_body,
         transform,
@@ -117,7 +124,7 @@ fn lock_dice(
                 dice.static_timer += 1;
             }
             if dice.static_timer > 20 {
-                *handle_scene = scene_assets.dice1.clone();
+                // *handle_scene = scene_assets.dice1.clone();
                 *rigid_body = RigidBody::Static;
                 dice.number = determine_dice_face(transform.rotation);
                 info!("dice number: {}", dice.number);
